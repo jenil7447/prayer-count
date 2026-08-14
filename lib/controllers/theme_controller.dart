@@ -9,12 +9,12 @@ class ThemeController extends GetxController {
 
   // 2. Use List<Color> instead of List<MaterialColor>
   final List<Color> availableColors = [
-    Colors.deepOrange,
-    Colors.purple,
-    Colors.teal,
-    Colors.indigo,
-    Colors.amber,
-    Colors.green,
+    const Color(0xFF3F5F4A), // Sage Forest Green
+    const Color(0xFFB76E79), // Muted Lotus Pink
+    const Color(0xFFB66A4C), // Warm Terracotta
+    const Color(0xFF2F6F6D), // Deep Teal
+    const Color(0xFF705477), // Muted Plum
+    const Color(0xFFC49A3A), // Golden Ochre
   ];
 
   @override

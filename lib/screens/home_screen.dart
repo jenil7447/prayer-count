@@ -5,7 +5,7 @@ import '../controllers/theme_controller.dart';
 import 'saved_sessions_screen.dart';
 import 'calendar_screen.dart';
 import 'theme_screen.dart';
-
+import '../widgets/mala_counter.dart';
 class HomeScreen extends StatelessWidget {
   final CounterController controller = Get.put(CounterController());
   final ThemeController themeController = Get.put(ThemeController());
@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
       final themeColor = themeController.primaryColor.value;
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Japa Counter'),
+          title: const Text('Prayer Counter'),
           backgroundColor: themeColor,
           actions: [
             IconButton(
@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
 
-            const Spacer(),
+            //const Spacer(),
 
             // Target Indicator
             GestureDetector(
@@ -84,43 +84,16 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            //const SizedBox(height: 10),
 
             // Main Increment Area
             Expanded(
               flex: 3,
-              child: Center(
-                child: InkWell(
-                  onTap: controller.increment,
-                  borderRadius: BorderRadius.circular(150),
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: themeColor.withOpacity(0.15),
-                      border: Border.all(color: themeColor, width: 8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${controller.count.value}',
-                          style: TextStyle(
-                            fontSize: 64,
-                            fontWeight: FontWeight.bold,
-                            color: themeColor,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'TAP TO COUNT',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              child: MalaCounterWidget(
+                count: controller.count.value,
+                target: controller.target.value,
+                onTap: controller.increment,
+                themeColor: themeColor,
               ),
             ),
 
