@@ -16,6 +16,17 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final themeColor = themeController.primaryColor.value;
+      
+      // Register observables tracked inside LayoutBuilder
+      // Obx only tracks variables accessed synchronously in its builder!
+      controller.count.value;
+      controller.target.value;
+      controller.todayCount.value;
+      controller.streak.value;
+      controller.isAudioEnabled.value;
+      controller.isVibrationEnabled.value;
+      controller.isWakeLockEnabled.value;
+
       return Scaffold(
         appBar: AppBar(
           title: const Text('Prayer Counter'),
@@ -27,11 +38,20 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            // Control Toggles Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        // Control Toggles Bar
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -54,69 +74,147 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Navigation Quick Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: themeColor),
-                  icon: const Icon(Icons.bookmark, color: Colors.white),
-                  label: const Text('Saved Counts', style: TextStyle(color: Colors.white)),
-                  onPressed: () => Get.to(() => SavedSessionsScreen()),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: themeColor),
-                  icon: const Icon(Icons.calendar_month, color: Colors.white),
-                  label: const Text('Streak & Logs', style: TextStyle(color: Colors.white)),
-                  onPressed: () => Get.to(() => CalendarScreen()),
-                ),
-              ],
-            ),
-
-            //const Spacer(),
-
             // Target Indicator
             GestureDetector(
               onTap: () => _showTargetDialog(context),
-              child: Chip(
-                avatar: const Icon(Icons.flag, size: 18),
-                label: Text("Target: ${controller.target.value} (Tap to change)"),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.flag, color: themeColor, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Target: ${controller.target.value}",
+                      style: const TextStyle(
+                        color: Color(0xFF2C3E2D),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "(Tap to change)",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-            //const SizedBox(height: 10),
+            const Spacer(),
 
             // Main Increment Area
-            Expanded(
-              flex: 3,
-              child: MalaCounterWidget(
-                count: controller.count.value,
-                target: controller.target.value,
-                onTap: controller.increment,
-                themeColor: themeColor,
+            MalaCounterWidget(
+              count: controller.count.value,
+              target: controller.target.value,
+              onTap: controller.increment,
+              themeColor: themeColor,
+            ),
+
+            const Spacer(),
+
+            // Stats & Action Grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Get.to(() => SavedSessionsScreen()),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: themeColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.history, color: themeColor, size: 28),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'History',
+                              style: TextStyle(
+                                color: Color(0xFF2C3E2D),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  _buildStatCard(
+                    title: 'Streak',
+                    value: '${controller.streak.value} 🔥',
+                    bgColor: themeColor.withOpacity(0.15),
+                    onTap: () => Get.to(() => CalendarScreen()),
+                  ),
+                ],
               ),
             ),
 
+            const SizedBox(height: 16),
+
             // Reset & Save Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.refresh, color: Colors.red),
-                  label: const Text('Reset', style: TextStyle(color: Colors.red)),
-                  onPressed: controller.resetCounter,
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: themeColor),
-                  icon: const Icon(Icons.save, color: Colors.white),
-                  label: const Text('Save Session', style: TextStyle(color: Colors.white)),
-                  onPressed: () => _showSaveDialog(context),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                children: [
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey,
+                    ),
+                    icon: const Icon(Icons.restart_alt, size: 20),
+                    label: const Text('Reset', style: TextStyle(fontSize: 16)),
+                    onPressed: controller.resetCounter,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeColor,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                      label: const Text(
+                        'Save Session',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () => _showSaveDialog(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
-          ],
+            //const Spacer(),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       );
     });
@@ -157,6 +255,49 @@ class HomeScreen extends StatelessWidget {
           Get.back();
         }
       },
+    );
+  }
+
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Color(0xFF2C3E2D),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -14,6 +14,7 @@ class CounterController extends GetxController {
   var isVibrationEnabled = true.obs;
   var isWakeLockEnabled = false.obs;
   var streak = 0.obs; // Observable streak variable
+  var todayCount = 0.obs; // Observable for today's total counts
 
   late Box<ChantSession> sessionBox;
   late Box<DailyLog> dailyBox;
@@ -110,6 +111,11 @@ class CounterController extends GetxController {
   void updateStreak() {
     int currentStreak = 0;
     DateTime date = DateTime.now();
+    
+    // Update today's count observable
+    String todayKey = DateFormat('yyyy-MM-dd').format(date);
+    todayCount.value = dailyBox.get(todayKey)?.count ?? 0;
+
     while (true) {
       String key = DateFormat('yyyy-MM-dd').format(date);
       if (dailyBox.containsKey(key) && dailyBox.get(key)!.count > 0) {
