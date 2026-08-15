@@ -50,7 +50,7 @@ class MalaCounterWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'JAPA COUNT',
+                      'COUNTER',
                       style: TextStyle(
                         fontSize: 12,
                         letterSpacing: 2.5,

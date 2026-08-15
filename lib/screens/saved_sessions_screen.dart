@@ -30,9 +30,33 @@ class SavedSessionsScreen extends StatelessWidget {
                 child: ListTile(
                   title: Text(session.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(DateFormat('dd MMM yyyy, hh:mm a').format(session.date)),
-                  trailing: Text(
-                    '${session.count}',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${session.count}',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: 'Delete Session',
+                            content: const Text('Are you sure you want to delete this session?'),
+                            textConfirm: 'Delete',
+                            textCancel: 'Cancel',
+                            confirmTextColor: Colors.white,
+                            buttonColor: Colors.black,
+                            cancelTextColor: Colors.black,
+                            onConfirm: () {
+                              box.deleteAt(box.length - 1 - index);
+                              Get.back();
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

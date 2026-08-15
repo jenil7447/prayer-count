@@ -29,11 +29,18 @@ class HomeScreen extends StatelessWidget {
 
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Prayer Counter'),
+          title: const Text('Prayer Counter',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black
+          ),
+          ),
           backgroundColor: themeColor,
           actions: [
             IconButton(
-              icon: const Icon(Icons.palette),
+              icon: const Icon(Icons.palette,
+              color: Colors.black,
+              ),
               onPressed: () => Get.to(() => ThemeScreen()),
             ),
           ],
