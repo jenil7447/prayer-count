@@ -5,7 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'models/chant_session.dart';
 import 'models/daily_log.dart';
 import 'controllers/theme_controller.dart';
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: themeController.primaryColor.value,
         useMaterial3: true,
       ),
-      home: HomeScreen(),
+      home: const SplashScreen(),
     ));
   }
 }

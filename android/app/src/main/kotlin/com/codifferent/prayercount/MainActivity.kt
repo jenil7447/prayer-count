@@ -1,4 +1,4 @@
-package com.example.prayercount
+package com.codifferent.prayercount
 
 import io.flutter.embedding.android.FlutterActivity
 
