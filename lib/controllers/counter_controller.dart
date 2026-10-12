@@ -249,163 +249,65 @@ class CounterController extends GetxController {
   // ============================================================
 
   void _updateDailyLog() {
-    final todayKey =
-    DateFormat('yyyy-MM-dd').format(
-      DateTime.now(),
-    );
-
+    final todayKey = _dateKey(DateTime.now());
     final existingLog = dailyBox.get(todayKey);
 
-    // ------------------------------------------------------------
-    // CASE 1:
-    // Today's log already exists
-    // ------------------------------------------------------------
-
     if (existingLog != null) {
-      // Remember whether today was previously inactive.
-      final wasZero = existingLog.count == 0;
-
-      // Increase today's total.
+      // Increase the persisted total for today.
       existingLog.count++;
-
-      // Save updated Hive object.
       existingLog.save();
-
-      // Update reactive UI immediately.
       todayCount.value = existingLog.count;
-
-      // ----------------------------------------------------------
-      // IMPORTANT OPTIMIZATION
-      //
-      // Only update the streak when today changes from:
-      //
-      //     0 chants → 1 chant
-      //
-      // Subsequent taps don't need to recalculate the streak.
-      // ----------------------------------------------------------
-
-      if (wasZero) {
-        _updateStreakAfterFirstChant();
-      }
-
-      return;
+    } else {
+      // Record the first chant for today.
+      dailyBox.put(
+        todayKey,
+        DailyLog(dateKey: todayKey, count: 1),
+      );
+      todayCount.value = 1;
     }
 
-    // ------------------------------------------------------------
-    // CASE 2:
-    // No log exists for today
-    // ------------------------------------------------------------
-
-    final newLog = DailyLog(
-      dateKey: todayKey,
-      count: 1,
-    );
-
-    dailyBox.put(
-      todayKey,
-      newLog,
-    );
-
-    // Update today's count in UI.
-    todayCount.value = 1;
-
-    // This is the first chant of the day,
-    // so streak needs to be updated.
-    _updateStreakAfterFirstChant();
+    // Always derive the streak from persisted logs instead of
+    // incrementing a potentially stale in-memory value.
+    updateStreak();
   }
 
   // ============================================================
-  // UPDATE STREAK AFTER FIRST CHANT OF THE DAY
+  // DATE HELPERS
   // ============================================================
 
-  void _updateStreakAfterFirstChant() {
-    final today = DateTime.now();
+  String _dateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
-    final yesterday = today.subtract(
-      const Duration(days: 1),
-    );
-
-    final yesterdayKey =
-    DateFormat('yyyy-MM-dd').format(
-      yesterday,
-    );
-
-    final yesterdayLog =
-    dailyBox.get(yesterdayKey);
-
-    // ------------------------------------------------------------
-    // If yesterday had chanting:
-    //
-    //     yesterday = active
-    //     today = active
-    //
-    // Extend the streak.
-    // ------------------------------------------------------------
-
-    if (yesterdayLog != null &&
-        yesterdayLog.count > 0) {
-      streak.value++;
-    }
-
-    // ------------------------------------------------------------
-    // If yesterday didn't have chanting:
-    //
-    //     today starts a new streak.
-    // ------------------------------------------------------------
-
-    else {
-      streak.value = 1;
-    }
-  }
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   // ============================================================
   // REBUILD STREAK FROM DATABASE
   // ============================================================
 
   void updateStreak() {
-    int currentStreak = 0;
-
-    DateTime date = DateTime.now();
-
-    // ------------------------------------------------------------
-    // Update today's count
-    // ------------------------------------------------------------
-
-    final todayKey =
-    DateFormat('yyyy-MM-dd').format(date);
-
+    final today = _dateOnly(DateTime.now());
+    final todayKey = _dateKey(today);
     final todayLog = dailyBox.get(todayKey);
 
     todayCount.value = todayLog?.count ?? 0;
 
-    // ------------------------------------------------------------
-    // Calculate streak
-    //
-    // Start from today and move backwards until we find
-    // a day where the user didn't chant.
-    // ------------------------------------------------------------
+    // A streak stays alive during the current day even before the
+    // user chants today. In that case, start counting from yesterday.
+    // If today already has a chant, include today in the streak.
+    var date = todayLog != null && todayLog.count > 0
+        ? today
+        : today.subtract(const Duration(days: 1));
+
+    var currentStreak = 0;
 
     while (true) {
-      final key =
-      DateFormat('yyyy-MM-dd').format(date);
-
-      final log = dailyBox.get(key);
-
-      // If the day exists and the user chanted,
-      // this day belongs to the streak.
-      if (log != null && log.count > 0) {
-        currentStreak++;
-
-        // Move to previous day.
-        date = date.subtract(
-          const Duration(days: 1),
-        );
-      }
-
-      // First inactive day → streak ends.
-      else {
+      final log = dailyBox.get(_dateKey(date));
+      if (log == null || log.count <= 0) {
         break;
       }
+
+      currentStreak++;
+      date = date.subtract(const Duration(days: 1));
     }
 
     streak.value = currentStreak;
