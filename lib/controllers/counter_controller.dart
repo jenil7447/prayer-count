@@ -3,10 +3,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vibration/vibration.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:intl/intl.dart';
 
 import '../models/chant_session.dart';
 import '../models/daily_log.dart';
+import '../utils/streak_calculator.dart';
 
 class CounterController extends GetxController {
   // ============================================================
@@ -249,7 +249,7 @@ class CounterController extends GetxController {
   // ============================================================
 
   void _updateDailyLog() {
-    final todayKey = _dateKey(DateTime.now());
+    final todayKey = dailyLogDateKey(DateTime.now());
     final existingLog = dailyBox.get(todayKey);
 
     if (existingLog != null) {
@@ -272,45 +272,22 @@ class CounterController extends GetxController {
   }
 
   // ============================================================
-  // DATE HELPERS
-  // ============================================================
-
-  String _dateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
-
-  DateTime _dateOnly(DateTime date) =>
-      DateTime(date.year, date.month, date.day);
-
-  // ============================================================
   // REBUILD STREAK FROM DATABASE
   // ============================================================
 
   void updateStreak() {
-    final today = _dateOnly(DateTime.now());
-    final todayKey = _dateKey(today);
+    final todayKey = dailyLogDateKey(DateTime.now());
     final todayLog = dailyBox.get(todayKey);
 
     todayCount.value = todayLog?.count ?? 0;
 
-    // A streak stays alive during the current day even before the
-    // user chants today. In that case, start counting from yesterday.
-    // If today already has a chant, include today in the streak.
-    var date = todayLog != null && todayLog.count > 0
-        ? today
-        : today.subtract(const Duration(days: 1));
-
-    var currentStreak = 0;
-
-    while (true) {
-      final log = dailyBox.get(_dateKey(date));
-      if (log == null || log.count <= 0) {
-        break;
-      }
-
-      currentStreak++;
-      date = date.subtract(const Duration(days: 1));
-    }
-
-    streak.value = currentStreak;
+    // Calculate from saved daily logs every time. This avoids stale
+    // in-memory streak values and handles app opens on a new day.
+    streak.value = calculateCurrentStreak(
+      now: DateTime.now(),
+      todayCount: todayCount.value,
+      dailyCountForDate: (dateKey) => dailyBox.get(dateKey)?.count ?? 0,
+    );
   }
 
   // ============================================================
