@@ -276,7 +276,8 @@ class CounterController extends GetxController {
   // ============================================================
 
   void updateStreak() {
-    final todayKey = dailyLogDateKey(DateTime.now());
+    final now = DateTime.now();
+    final todayKey = dailyLogDateKey(now);
     final todayLog = dailyBox.get(todayKey);
 
     todayCount.value = todayLog?.count ?? 0;
@@ -284,7 +285,7 @@ class CounterController extends GetxController {
     // Calculate from saved daily logs every time. This avoids stale
     // in-memory streak values and handles app opens on a new day.
     streak.value = calculateCurrentStreak(
-      now: DateTime.now(),
+      now: now,
       todayCount: todayCount.value,
       dailyCountForDate: (dateKey) => dailyBox.get(dateKey)?.count ?? 0,
     );
