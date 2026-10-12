@@ -253,21 +253,28 @@ class CounterController extends GetxController {
     final existingLog = dailyBox.get(todayKey);
 
     if (existingLog != null) {
-      // Increase the persisted total for today.
+      // Recalculate only if this is the first chant recorded today.
+      final dayWasAlreadyActive = existingLog.count > 0;
+
       existingLog.count++;
       existingLog.save();
       todayCount.value = existingLog.count;
-    } else {
-      // Record the first chant for today.
-      dailyBox.put(
-        todayKey,
-        DailyLog(dateKey: todayKey, count: 1),
-      );
-      todayCount.value = 1;
+
+      if (!dayWasAlreadyActive) {
+        updateStreak();
+      }
+      return;
     }
 
-    // Always derive the streak from persisted logs instead of
-    // incrementing a potentially stale in-memory value.
+    // Record the first chant for today.
+    dailyBox.put(
+      todayKey,
+      DailyLog(dateKey: todayKey, count: 1),
+    );
+    todayCount.value = 1;
+
+    // Derive the streak from saved logs rather than incrementing a
+    // potentially stale in-memory value.
     updateStreak();
   }
 
